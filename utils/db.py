@@ -12,6 +12,7 @@ class Database:
         self.user = os.getenv("MYSQL_USERNAME")
         self.password = os.getenv("MYSQL_PASSWORD")
         self.database = os.getenv("DATABASE")
+        self.port = os.getenv("MYSQL_PORT", 3306)
         self.conn = None
         self.cursor = None
         self.logger = logging.getLogger(os.getenv("LOGGER_APP"))
@@ -22,6 +23,7 @@ class Database:
             user=self.user,
             password=self.password,
             database=self.database,
+            port=self.port,
         )
         self.cursor = self.conn.cursor(dictionary=True)
 

@@ -20,14 +20,31 @@ class DBBackup(Backup):
             f"-u{os.getenv('MYSQL_USERNAME')}",
             f'--password="{os.getenv("MYSQL_PASSWORD")}"',
             "--skip-lock-tables",
-            "--ignore-table=octanet.master_city",
-            "--ignore-table=octanet.master_pin",
         ]
+
+        MYSQL_PORT = os.getenv("MYSQL_PORT", False)
+        if MYSQL_PORT:
+            self.command.append(f"--port={MYSQL_PORT}")
         self.databases = self.get_databases()
 
     def start_backup(self) -> None:
         for database in self.databases:
             try:
+                excluded_tb = (
+                    os.getenv("EXCLUDED_TABLES").split(",")
+                    if os.getenv("EXCLUDED_TABLES")
+                    else []
+                )
+
+                # Remove any item that contains "--ignore-table="
+                self.command = [
+                    item for item in self.command if "--ignore-table=" not in item
+                ]
+
+                # adding  item  "--ignore-table=" with current database
+                for ignore_tb in excluded_tb:
+                    self.command.append(f"--ignore-table={database}.{ignore_tb}")
+
                 os.chdir(os.getenv("MYSQL_DUMP_PATH"))
                 command = self.command.copy()
                 command.append(f"{database} > {self.save_path}/_bkp_{database}.sql")
